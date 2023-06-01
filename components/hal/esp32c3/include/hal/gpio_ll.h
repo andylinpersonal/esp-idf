@@ -63,6 +63,18 @@ static inline void gpio_ll_pullup_dis(gpio_dev_t *hw, uint32_t gpio_num)
 }
 
 /**
+ * @brief Return pull-up status on GPIO.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number
+ * @return if GPIO gpio_num`s FUN_PU is true
+ */
+static inline bool gpio_ll_pullup_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!REG_GET_BIT(GPIO_PIN_MUX_REG[gpio_num], FUN_PU);
+}
+
+/**
   * @brief Enable pull-down on GPIO.
   *
   * @param hw Peripheral GPIO hardware instance address.
@@ -86,6 +98,19 @@ static inline void gpio_ll_pulldown_dis(gpio_dev_t *hw, uint32_t gpio_num)
 }
 
 /**
+ * @brief Return pull-down status on GPIO.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number
+ * @return if GPIO gpio_num`s FUN_PD is true
+ */
+__attribute__((always_inline))
+static inline bool gpio_ll_pulldown_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!REG_GET_BIT(IO_MUX_GPIO0_REG + (gpio_num * 4), FUN_PD);
+}
+
+/**
  * @brief  GPIO set interrupt trigger type
  *
  * @param  hw Peripheral GPIO hardware instance address.
@@ -95,6 +120,18 @@ static inline void gpio_ll_pulldown_dis(gpio_dev_t *hw, uint32_t gpio_num)
 static inline void gpio_ll_set_intr_type(gpio_dev_t *hw, uint32_t gpio_num, gpio_int_type_t intr_type)
 {
     hw->pin[gpio_num].int_type = intr_type;
+}
+
+/**
+ * @brief  GPIO get interrupt trigger type
+ *
+ * @param  hw Peripheral GPIO hardware instance address.
+ * @param  gpio_num GPIO number. If you want to set the trigger type of e.g. of GPIO16, gpio_num should be GPIO_NUM_16 (16);
+ * @return Interrupt type, select from gpio_int_type_t
+ */
+static inline gpio_int_type_t gpio_ll_get_intr_type(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return hw->pin[gpio_num].int_type;
 }
 
 /**
@@ -197,6 +234,18 @@ static inline void gpio_ll_input_enable(gpio_dev_t *hw, uint32_t gpio_num)
 }
 
 /**
+ * @brief Return input status on GPIO.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number of the pad.
+ * @return if GPIO gpio_num`s FUN_IE is true.
+ */
+static inline bool gpio_ll_input_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!PIN_INPUT_ENABLED(IO_MUX_GPIO0_REG + (gpio_num * 4));
+}
+
+/**
  * @brief Enable GPIO pin filter
  *
  * @param hw Peripheral GPIO hardware instance address.
@@ -216,6 +265,18 @@ static inline void gpio_ll_pin_filter_enable(gpio_dev_t *hw, uint32_t gpio_num)
 static inline void gpio_ll_pin_filter_disable(gpio_dev_t *hw, uint32_t gpio_num)
 {
     PIN_FILTER_DIS(IO_MUX_GPIO0_REG + (gpio_num * 4));
+}
+
+/**
+ * @brief Return filter status on GPIO.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number of the pad.
+ * @return if GPIO gpio_num`s FILTER_EN is true.
+ */
+static inline bool gpio_ll_pin_filter_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!PIN_FILTER_ENABLED(IO_MUX_GPIO0_REG + (gpio_num * 4));
 }
 
 /**
@@ -245,6 +306,18 @@ static inline __attribute__((always_inline)) void gpio_ll_output_enable(gpio_dev
 }
 
 /**
+ * @brief Is output enabled on GPIO.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number of the pad.
+ * @return if GPIO gpio_num`s FUN_OE is true.
+ */
+static inline __attribute__((always_inline)) bool gpio_ll_output_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!(hw->enable_w1ts.enable_w1ts &= (0x1 << gpio_num));
+}
+
+/**
   * @brief Disable open-drain mode on GPIO.
   *
   * @param hw Peripheral GPIO hardware instance address.
@@ -264,6 +337,18 @@ static inline __attribute__((always_inline)) void gpio_ll_od_disable(gpio_dev_t 
 static inline void gpio_ll_od_enable(gpio_dev_t *hw, uint32_t gpio_num)
 {
     hw->pin[gpio_num].pad_driver = 1;
+}
+
+/**
+ * @brief Is open-drain mode enabled on GPIO.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number
+ * @return true: OD enabled, false: OD disabled (PP)
+ */
+static inline bool gpio_ll_od_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!hw->pin[gpio_num].pad_driver;
 }
 
 /**
@@ -336,6 +421,18 @@ static inline void gpio_ll_wakeup_enable(gpio_dev_t *hw, uint32_t gpio_num)
 static inline void gpio_ll_wakeup_disable(gpio_dev_t *hw, uint32_t gpio_num)
 {
     hw->pin[gpio_num].wakeup_enable = 0;
+}
+
+/**
+ * @brief Return GPIO wakeup status.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number
+ * @return true if wakeup is enabled on this pin
+ */
+static inline bool gpio_ll_wakeup_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!hw->pin[gpio_num].wakeup_enable;
 }
 
 /**
@@ -537,6 +634,18 @@ static inline void gpio_ll_sleep_sel_dis(gpio_dev_t *hw, uint32_t gpio_num)
 }
 
 /**
+ * @brief Return slp-sel status on GPIO.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number
+ * @return if GPIO gpio_num`s SLP_SEL is true
+ */
+static inline bool gpio_ll_sleep_sel_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!PIN_SLP_SEL_ENABLED(GPIO_PIN_MUX_REG[gpio_num]);
+}
+
+/**
   * @brief Disable GPIO pull-up in sleep mode.
   *
   * @param hw Peripheral GPIO hardware instance address.
@@ -556,6 +665,18 @@ static inline void gpio_ll_sleep_pullup_dis(gpio_dev_t *hw, uint32_t gpio_num)
 static inline void gpio_ll_sleep_pullup_en(gpio_dev_t *hw, uint32_t gpio_num)
 {
     PIN_SLP_PULLUP_ENABLE(GPIO_PIN_MUX_REG[gpio_num]);
+}
+
+/**
+ * @brief Return slp-pull-up status on GPIO.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number
+ * @return if GPIO gpio_num`s SLP_PU is true
+ */
+static inline bool gpio_ll_sleep_pullup_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return PIN_SLP_PULLUP_ENABLED(GPIO_PIN_MUX_REG[gpio_num]) ? true : false;
 }
 
 /**
@@ -581,6 +702,18 @@ static inline void gpio_ll_sleep_pulldown_dis(gpio_dev_t *hw, uint32_t gpio_num)
 }
 
 /**
+ * @brief Return slp-pull-down status on GPIO.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number
+ * @return if GPIO gpio_num`s SLP_PD is true
+ */
+static inline bool gpio_ll_sleep_pulldown_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!PIN_SLP_PULLDOWN_ENABLED(GPIO_PIN_MUX_REG[gpio_num]);
+}
+
+/**
   * @brief Disable GPIO input in sleep mode.
   *
   * @param hw Peripheral GPIO hardware instance address.
@@ -603,6 +736,18 @@ static inline void gpio_ll_sleep_input_enable(gpio_dev_t *hw, uint32_t gpio_num)
 }
 
 /**
+ * @brief Return GPIO input status in sleep mode.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number
+ * @return if GPIO gpio_num`s SLP_IE is true
+ */
+static inline bool gpio_ll_sleep_input_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!PIN_SLP_INPUT_ENABLED(GPIO_PIN_MUX_REG[gpio_num]);
+}
+
+/**
   * @brief Disable GPIO output in sleep mode.
   *
   * @param hw Peripheral GPIO hardware instance address.
@@ -622,6 +767,18 @@ static inline void gpio_ll_sleep_output_disable(gpio_dev_t *hw, uint32_t gpio_nu
 static inline void gpio_ll_sleep_output_enable(gpio_dev_t *hw, uint32_t gpio_num)
 {
     PIN_SLP_OUTPUT_ENABLE(GPIO_PIN_MUX_REG[gpio_num]);
+}
+
+/**
+ * @brief Return GPIO output status in sleep mode.
+ *
+ * @param hw Peripheral GPIO hardware instance address.
+ * @param gpio_num GPIO number
+ * @return if GPIO gpio_num`s SLP_OE is true
+ */
+static inline bool gpio_ll_sleep_output_is_enabled(gpio_dev_t *hw, uint32_t gpio_num)
+{
+    return !!PIN_SLP_OUTPUT_ENABLED(GPIO_PIN_MUX_REG[gpio_num]);
 }
 
 /**
