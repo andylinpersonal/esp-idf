@@ -80,6 +80,20 @@ static inline void rtcio_ll_function_select(int rtcio_num, rtcio_ll_func_t func)
 }
 
 /**
+ * @brief Get the current rtcio function.
+ *
+ * @note The RTC function must be selected before the pad analog function is enabled.
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @param func Select pin function.
+ */
+static inline rtcio_ll_func_t rtcio_ll_function_get(int rtcio_num)
+{
+    return SENS.sar_peri_clk_gate_conf.iomux_clk_en == 1 &&
+            GET_PERI_REG_MASK(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].mux)
+            ? RTCIO_FUNC_RTC : RTCIO_FUNC_DIGITAL;
+}
+
+/**
  * Enable rtcio output.
  *
  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
@@ -97,6 +111,17 @@ static inline void rtcio_ll_output_enable(int rtcio_num)
 static inline void rtcio_ll_output_disable(int rtcio_num)
 {
     RTCIO.enable_w1tc.w1tc = (1U << rtcio_num);
+}
+
+/**
+ * @brief Is RTC GPIO output enabled.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @return non-zero for output enabled
+ */
+static inline uint32_t rtcio_ll_output_is_enabled(int rtcio_num)
+{
+    return RTCIO.enable_w1tc.w1tc & (1U << rtcio_num);
 }
 
 /**
@@ -132,6 +157,17 @@ static inline void rtcio_ll_input_enable(int rtcio_num)
 static inline void rtcio_ll_input_disable(int rtcio_num)
 {
     CLEAR_PERI_REG_MASK(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].ie);
+}
+
+/**
+ * @brief Is RTC GPIO input enabled.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @return non-zero: input enabled
+ */
+static inline uint32_t rtcio_ll_input_is_enabled(int rtcio_num)
+{
+    return GET_PERI_REG_MASK(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].ie);
 }
 
 /**
@@ -181,6 +217,17 @@ static inline void rtcio_ll_output_mode_set(int rtcio_num, rtcio_ll_out_mode_t m
 }
 
 /**
+ * @brief Set RTC GPIO pad output mode.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @return mode Output mode.
+ */
+static inline rtcio_ll_out_mode_t rtcio_ll_output_mode_get(int rtcio_num)
+{
+    return RTCIO.pin[rtcio_num].pad_driver;
+}
+
+/**
  * RTC GPIO pullup enable.
  *
  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
@@ -213,6 +260,18 @@ static inline void rtcio_ll_pullup_disable(int rtcio_num)
 }
 
 /**
+  * @brief Return pull-up status on GPIO.
+  *
+  * @param hw Peripheral GPIO hardware instance address.
+  * @param gpio_num GPIO number
+  * @return non-zero if GPIO gpio_num`s FUN_PU is enabled
+  */
+static inline uint32_t rtcio_ll_pullup_is_enabled(int rtcio_num)
+{
+    return GET_PERI_REG_MASK(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].pullup);
+}
+
+/**
  * RTC GPIO pulldown enable.
  *
  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
@@ -234,6 +293,18 @@ static inline void rtcio_ll_pulldown_disable(int rtcio_num)
     if (rtc_io_desc[rtcio_num].pulldown) {
         CLEAR_PERI_REG_MASK(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].pulldown);
     }
+}
+
+/**
+  * @brief Return pull-down status on GPIO.
+  *
+  * @param hw Peripheral GPIO hardware instance address.
+  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+  * @return non-zero for enabled GPIO gpio_num`s FUN_PD
+  */
+static inline uint32_t rtcio_ll_pulldown_is_enabled(int rtcio_num)
+{
+    return GET_PERI_REG_MASK(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].pulldown);
 }
 
 /**
@@ -260,6 +331,17 @@ static inline void rtcio_ll_force_hold_enable(int rtcio_num)
 static inline void rtcio_ll_force_hold_disable(int rtcio_num)
 {
     CLEAR_PERI_REG_MASK(RTC_CNTL_PAD_HOLD_REG, rtc_io_desc[rtcio_num].hold_force);
+}
+
+/**
+ * Check whether hold function enabled on an RTC IO pad.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @return non-zero for true
+ */
+static inline uint32_t rtcio_ll_force_hold_is_enabled(int rtcio_num)
+{
+    return GET_PERI_REG_MASK(RTC_CNTL_PAD_HOLD_REG, rtc_io_desc[rtcio_num].hold_force);
 }
 
 /**
@@ -313,6 +395,17 @@ static inline void rtcio_ll_wakeup_disable(int rtcio_num)
 }
 
 /**
+ * Get trigger type of wakeup function from light sleep for rtcio.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @return One of RTCIO_WAKEUP_DISABLE, RTCIO_WAKEUP_LOW_LEVEL, RTCIO_WAKEUP_HIGH_LEVEL,
+ */
+static inline rtcio_ll_wake_type_t rtcio_ll_wakeup_get_enable_type(int rtcio_num)
+{
+    return RTCIO.pin[rtcio_num].int_type;
+}
+
+/**
  * Enable rtc io output in deep sleep.
  *
  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
@@ -337,6 +430,17 @@ static inline void rtcio_ll_disable_output_in_sleep(gpio_num_t gpio_num)
 }
 
 /**
+ * Whether rtc io output in deep sleep is enabled.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @return non-zero for true
+ */
+static inline uint32_t rtcio_ll_output_in_sleep_is_enabled(gpio_num_t gpio_num)
+{
+    return GET_PERI_REG_MASK(rtc_io_desc[gpio_num].reg, rtc_io_desc[gpio_num].slpoe);
+}
+
+/**
  * Enable rtc io input in deep sleep.
  *
  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
@@ -357,6 +461,17 @@ static inline void rtcio_ll_disable_input_in_sleep(gpio_num_t gpio_num)
 }
 
 /**
+ * Whether rtc io input in deep sleep is enabled.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @return non-zero for enabled
+ */
+static inline uint32_t rtcio_ll_input_in_sleep_is_enabled(gpio_num_t gpio_num)
+{
+    return GET_PERI_REG_MASK(rtc_io_desc[gpio_num].reg, rtc_io_desc[gpio_num].slpie);
+}
+
+/**
  * Enable rtc io keep another setting in deep sleep.
  *
  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
@@ -374,6 +489,17 @@ static inline void rtcio_ll_enable_sleep_setting(gpio_num_t gpio_num)
 static inline void rtcio_ll_disable_sleep_setting(gpio_num_t gpio_num)
 {
     CLEAR_PERI_REG_MASK(rtc_io_desc[gpio_num].reg, rtc_io_desc[gpio_num].slpsel);
+}
+
+/**
+ * Whether is rtc io keep another setting in deep sleep. (Default)
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @return non-zero for another setting is enabled in deep sleep
+ */
+static inline uint32_t rtcio_ll_sleep_setting_is_enabled(gpio_num_t gpio_num)
+{
+    return GET_PERI_REG_MASK(rtc_io_desc[gpio_num].reg, rtc_io_desc[gpio_num].slpsel);
 }
 
 /**
