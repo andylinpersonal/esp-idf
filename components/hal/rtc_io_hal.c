@@ -49,6 +49,54 @@ void rtcio_hal_set_direction(int rtcio_num, rtc_gpio_mode_t mode)
     }
 }
 
+rtc_gpio_mode_t rtcio_hal_get_direction(int rtcio_num)
+{
+    enum {
+        _RTC_GPIO_MODE_DISABLED_DEF = 0x0,
+        _RTC_GPIO_MODE_INPUT_DEF = 0x1,
+        _RTC_GPIO_MODE_OUTPUT_DEF = 0x2,
+        _RTC_GPIO_MODE_OD_DEF = 0x4,
+
+        RTC_GPIO_MODE_DISABLED_ = _RTC_GPIO_MODE_DISABLED_DEF,
+        RTC_GPIO_MODE_INPUT_ONLY_ = _RTC_GPIO_MODE_INPUT_DEF,
+        RTC_GPIO_MODE_OUTPUT_ONLY_ = _RTC_GPIO_MODE_OUTPUT_DEF,
+        RTC_GPIO_MODE_OUTPUT_OD_ = _RTC_GPIO_MODE_OUTPUT_DEF | _RTC_GPIO_MODE_OD_DEF,
+        RTC_GPIO_MODE_INPUT_OUTPUT_ = _RTC_GPIO_MODE_INPUT_DEF | _RTC_GPIO_MODE_OUTPUT_DEF,
+        RTC_GPIO_MODE_INPUT_OUTPUT_OD_ = _RTC_GPIO_MODE_INPUT_DEF | _RTC_GPIO_MODE_OUTPUT_DEF | _RTC_GPIO_MODE_OD_DEF,
+
+    } mode = _RTC_GPIO_MODE_DISABLED_DEF;
+
+    if (rtcio_ll_input_is_enabled(rtcio_num)) {
+        mode |= _RTC_GPIO_MODE_INPUT_DEF;
+    }
+
+    if (rtcio_ll_output_is_enabled(rtcio_num)){
+        mode |= _RTC_GPIO_MODE_OUTPUT_DEF;
+    }
+
+    if (rtcio_ll_output_mode_get(rtcio_num) == RTCIO_OUTPUT_OD) {
+        mode |= _RTC_GPIO_MODE_OD_DEF;
+    }
+
+    switch (mode)
+    {
+    case RTC_GPIO_MODE_OUTPUT_ONLY_:
+        return RTC_GPIO_MODE_OUTPUT_ONLY;
+    case RTC_GPIO_MODE_OUTPUT_OD_:
+        return RTC_GPIO_MODE_OUTPUT_OD;
+    case RTC_GPIO_MODE_INPUT_OUTPUT_:
+        return RTC_GPIO_MODE_INPUT_OUTPUT;
+    case RTC_GPIO_MODE_INPUT_OUTPUT_OD_:
+        return RTC_GPIO_MODE_INPUT_OUTPUT_OD;
+    default:
+        if (mode & _RTC_GPIO_MODE_INPUT_DEF) {
+          return RTC_GPIO_MODE_INPUT_ONLY;
+        } else {
+          return RTC_GPIO_MODE_DISABLED;
+        }
+    }
+}
+
 void rtcio_hal_set_direction_in_sleep(int rtcio_num, rtc_gpio_mode_t mode)
 {
     switch (mode) {
@@ -74,6 +122,37 @@ void rtcio_hal_set_direction_in_sleep(int rtcio_num, rtc_gpio_mode_t mode)
         break;
     default:
         break;
+    }
+}
+
+rtc_gpio_mode_t rtcio_hal_get_direction_in_sleep(int rtcio_num) {
+    enum {
+      _RTC_GPIO_MODE_IN_SLEEP_DISABLED_DEF = 0x0,
+      _RTC_GPIO_MODE_IN_SLEEP_INPUT_DEF = 0x1,
+      _RTC_GPIO_MODE_IN_SLEEP_OUTPUT_DEF = 0x2,
+      RTC_GPIO_MODE_IN_SLEEP_DISABLED_ = _RTC_GPIO_MODE_IN_SLEEP_DISABLED_DEF,
+      RTC_GPIO_MODE_IN_SLEEP_INPUT_ONLY_ = _RTC_GPIO_MODE_IN_SLEEP_INPUT_DEF,
+      RTC_GPIO_MODE_IN_SLEEP_OUTPUT_ONLY_ = _RTC_GPIO_MODE_IN_SLEEP_OUTPUT_DEF,
+      RTC_GPIO_MODE_IN_SLEEP_INPUT_OUTPUT_ = _RTC_GPIO_MODE_IN_SLEEP_INPUT_DEF | _RTC_GPIO_MODE_IN_SLEEP_OUTPUT_DEF,
+    } mode = _RTC_GPIO_MODE_IN_SLEEP_DISABLED_DEF;
+
+    if (rtcio_ll_input_in_sleep_is_enabled(rtcio_num)) {
+        mode |= _RTC_GPIO_MODE_IN_SLEEP_INPUT_DEF;
+    }
+
+    if (rtcio_ll_output_in_sleep_is_enabled(rtcio_num)) {
+        mode |= _RTC_GPIO_MODE_IN_SLEEP_OUTPUT_DEF;
+    }
+
+    switch (mode) {
+    case RTC_GPIO_MODE_IN_SLEEP_INPUT_ONLY_:
+        return RTC_GPIO_MODE_INPUT_ONLY;
+    case RTC_GPIO_MODE_IN_SLEEP_OUTPUT_ONLY_:
+        return RTC_GPIO_MODE_OUTPUT_ONLY;
+    case RTC_GPIO_MODE_IN_SLEEP_INPUT_OUTPUT_:
+        return RTC_GPIO_MODE_INPUT_OUTPUT;
+    default:
+        return RTC_GPIO_MODE_DISABLED;
     }
 }
 

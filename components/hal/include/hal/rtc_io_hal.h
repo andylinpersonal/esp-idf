@@ -41,6 +41,14 @@ extern "C" {
 
 #if SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
 /**
+ * Get currently selected rtcio function.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @return Currently select pin function.
+ */
+#define rtcio_hal_function_get(rtcio_num, func) rtcio_ll_function_get(rtcio_num)
+
+/**
  * Enable rtcio output.
  *
  * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
@@ -53,6 +61,14 @@ extern "C" {
  * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
  */
 #define rtcio_hal_output_disable(rtcio_num) rtcio_ll_output_disable(rtcio_num)
+
+/**
+ * Get rtcio output mode.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @return true: enabled, false: disabled
+ */
+#define rtcio_hal_output_is_enabled(rtcio_num) rtcio_ll_output_is_enabled(rtcio_num)
 
 /**
  * Set RTCIO output level.
@@ -75,6 +91,14 @@ extern "C" {
  * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
  */
 #define rtcio_hal_input_disable(rtcio_num) rtcio_ll_input_disable(rtcio_num)
+
+/**
+ * Get rtcio input mode.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @return true: enabled, false: disabled
+ */
+#define rtcio_hal_input_is_enabled(rtcio_num) rtcio_ll_input_is_enabled(rtcio_num)
 
 /**
  * Get RTCIO input level.
@@ -128,6 +152,14 @@ extern "C" {
 void rtcio_hal_set_direction(int rtcio_num, rtc_gpio_mode_t mode);
 
 /**
+ * Get RTC IO direction.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @return Get current IO direction.
+ */
+rtc_gpio_mode_t rtcio_hal_get_direction(int rtcio_num);
+
+/**
  * Set RTC IO direction in deep sleep or disable sleep status.
  *
  * NOTE: ESP32 support INPUT_ONLY mode.
@@ -137,6 +169,22 @@ void rtcio_hal_set_direction(int rtcio_num, rtc_gpio_mode_t mode);
  * @param mode IO direction.
  */
 void rtcio_hal_set_direction_in_sleep(int rtcio_num, rtc_gpio_mode_t mode);
+
+/**
+ * Get RTC IO direction in deep sleep.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @return Current IO direction in deep sleep.
+ */
+rtc_gpio_mode_t rtcio_hal_get_direction_in_sleep(int rtcio_num);
+
+/**
+ * Check whether RTC IO has another setting in sleep mode
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @return non-zero for another mode has been enabled in deep sleep.
+ */
+#define rtcio_hal_sleep_setting_is_enabled(rtcio_num) rtcio_ll_sleep_setting_is_enabled(rtcio_num)
 
 /**
  * RTC GPIO pullup enable.
@@ -151,6 +199,14 @@ void rtcio_hal_set_direction_in_sleep(int rtcio_num, rtc_gpio_mode_t mode);
  * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
  */
 #define rtcio_hal_pullup_disable(rtcio_num) rtcio_ll_pullup_disable(rtcio_num)
+
+/**
+ * Get RTC GPIO pullup mode.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @return true: enabled, false: disabled
+ */
+#define rtcio_hal_pullup_is_enabled(rtcio_num) rtcio_ll_pullup_is_enabled(rtcio_num)
 
 /**
  * RTC GPIO pulldown enable.
@@ -173,6 +229,14 @@ void rtcio_hal_set_direction_in_sleep(int rtcio_num, rtc_gpio_mode_t mode);
  * @param func Function to assign to the pin
  */
 #define rtcio_hal_iomux_func_sel(rtcio_num, func) rtcio_ll_iomux_func_sel(rtcio_num, func)
+
+/*
+ * Get RTC GPIO pulldown mode.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @return true: enabled, false: disabled
+ */
+#define rtcio_hal_pulldown_is_enabled(rtcio_num) rtcio_ll_pulldown_is_enabled(rtcio_num)
 
 #endif // SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
 
@@ -197,6 +261,14 @@ void rtcio_hal_set_direction_in_sleep(int rtcio_num, rtc_gpio_mode_t mode);
  * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
  */
 #define rtcio_hal_hold_disable(rtcio_num) rtcio_ll_force_hold_disable(rtcio_num)
+
+
+/**
+ * Check whether hold function is enabled on an RTC IO pad.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ */
+#define rtcio_hal_force_hold_is_enabled(rtcio_num) rtcio_ll_force_hold_is_enabled(rtcio_num)
 
 /**
  * Enable force hold function on all RTC IO pads.
@@ -235,6 +307,13 @@ void rtcio_hal_set_direction_in_sleep(int rtcio_num, rtc_gpio_mode_t mode);
  * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
  */
 #define rtcio_hal_wakeup_disable(rtcio_num) rtcio_ll_wakeup_disable(rtcio_num)
+
+/**
+ * Disable wakeup function from light sleep status for rtcio.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ */
+#define rtcio_hal_wakeup_get_enable_type(rtcio_num) rtcio_ll_wakeup_get_enable_type(rtcio_num)
 
 /**
  * Set specific logic level on an RTC IO pin as a wakeup trigger.

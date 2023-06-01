@@ -52,6 +52,15 @@ typedef struct {
 #define gpio_hal_pullup_dis(hal, gpio_num) gpio_ll_pullup_dis((hal)->dev, gpio_num)
 
 /**
+  * @brief Is pull-up enabled on GPIO.
+  *
+  * @param hal Context of the HAL layer
+  * @param gpio_num GPIO number
+  * @return true: enabled, false: disabled
+  */
+#define gpio_hal_pullup_is_enabled(hal, gpio_num) gpio_ll_pullup_is_enabled((hal)->dev, gpio_num)
+
+/**
   * @brief Enable pull-down on GPIO.
   *
   * @param hal Context of the HAL layer
@@ -68,6 +77,15 @@ typedef struct {
 #define gpio_hal_pulldown_dis(hal, gpio_num) gpio_ll_pulldown_dis((hal)->dev, gpio_num)
 
 /**
+  * @brief Is pull-down enabled on GPIO.
+  *
+  * @param hal Context of the HAL layer
+  * @param gpio_num GPIO number
+  * @return true: enabled, false: disabled
+  */
+#define gpio_hal_pulldown_is_enabled(hal, gpio_num) gpio_ll_pulldown_is_enabled((hal)->dev, gpio_num)
+
+/**
  * @brief  GPIO set interrupt trigger type
  *
  * @param  hal Context of the HAL layer
@@ -75,6 +93,15 @@ typedef struct {
  * @param  intr_type Interrupt type, select from gpio_int_type_t
  */
 #define gpio_hal_set_intr_type(hal, gpio_num, intr_type) gpio_ll_set_intr_type((hal)->dev, gpio_num, intr_type)
+
+/**
+ * @brief  GPIO get interrupt trigger type
+ *
+ * @param  hal Context of the HAL layer
+ * @param  gpio_num GPIO number. If you want to set the trigger type of e.g. of GPIO16, gpio_num should be GPIO_NUM_16 (16);
+ * @return Interrupt type: gpio_int_type_t
+ */
+#define gpio_hal_get_intr_type(hal, gpio_num) gpio_ll_get_intr_type((hal)->dev, gpio_num)
 
 /**
   * @brief Get GPIO interrupt status
@@ -137,6 +164,15 @@ void gpio_hal_intr_disable(gpio_hal_context_t *hal, uint32_t gpio_num);
 #define gpio_hal_input_enable(hal, gpio_num) gpio_ll_input_enable((hal)->dev, gpio_num)
 
 /**
+  * @brief Is input enabled on GPIO.
+  *
+  * @param hal Context of the HAL layer
+  * @param gpio_num GPIO number
+  * @return true: enabled, false: disabled
+  */
+#define gpio_hal_input_is_enabled(hal, gpio_num) gpio_ll_input_is_enabled((hal)->dev, gpio_num)
+
+/**
   * @brief Disable output mode on GPIO.
   *
   * @param hal Context of the HAL layer
@@ -153,6 +189,15 @@ void gpio_hal_intr_disable(gpio_hal_context_t *hal, uint32_t gpio_num);
 #define gpio_hal_output_enable(hal, gpio_num) gpio_ll_output_enable((hal)->dev, gpio_num)
 
 /**
+  * @brief Is output enabled on GPIO.
+  *
+  * @param hal Context of the HAL layer
+  * @param gpio_num GPIO number
+  * @return true: enabled, false: disabled
+  */
+#define gpio_hal_output_is_enabled(hal, gpio_num) gpio_ll_output_is_enabled((hal)->dev, gpio_num)
+
+/**
   * @brief Disable open-drain mode on GPIO.
   *
   * @param hal Context of the HAL layer
@@ -167,6 +212,15 @@ void gpio_hal_intr_disable(gpio_hal_context_t *hal, uint32_t gpio_num);
   * @param gpio_num GPIO number
   */
 #define gpio_hal_od_enable(hal, gpio_num) gpio_ll_od_enable((hal)->dev, gpio_num)
+
+/**
+  * @brief Is open-drain mode enabled on GPIO.
+  *
+  * @param hal Context of the HAL layer
+  * @param gpio_num GPIO number
+  * @return true: enabled, false: disabled
+  */
+#define gpio_hal_od_is_enabled(hal, gpio_num) gpio_ll_od_is_enabled((hal)->dev, gpio_num)
 
 /**
  * @brief  Select a function for the pin in the IOMUX
@@ -215,6 +269,15 @@ void gpio_hal_intr_disable(gpio_hal_context_t *hal, uint32_t gpio_num);
  * @param gpio_num GPIO number
  */
 #define gpio_hal_wakeup_disable(hal, gpio_num) gpio_ll_wakeup_disable((hal)->dev, gpio_num)
+
+/**
+ * @brief Is GPIO wake-up function enabled.
+ *
+ * @param hal Context of the HAL layer
+ * @param gpio_num GPIO number
+ * @return true for enabled
+ */
+#define gpio_hal_wakeup_is_enabled(hal, gpio_num) gpio_ll_wakeup_is_enabled((hal)->dev, gpio_num)
 
 /**
   * @brief Set GPIO pad drive capability
@@ -369,6 +432,14 @@ void gpio_hal_intr_disable(gpio_hal_context_t *hal, uint32_t gpio_num);
 #define gpio_hal_sleep_pullup_dis(hal, gpio_num) gpio_ll_sleep_pullup_dis((hal)->dev, gpio_num)
 
 /**
+  * @brief Is pull-up enabled on GPIO when system sleep.
+  *
+  * @param hal Context of the HAL layer
+  * @param gpio_num GPIO number
+  */
+#define gpio_hal_sleep_pullup_is_enabled(hal, gpio_num) gpio_ll_sleep_pullup_is_enabled((hal)->dev, gpio_num)
+
+/**
   * @brief Enable pull-down on GPIO when system sleep.
   *
   * @param hal Context of the HAL layer
@@ -383,6 +454,14 @@ void gpio_hal_intr_disable(gpio_hal_context_t *hal, uint32_t gpio_num);
   * @param gpio_num GPIO number
   */
 #define gpio_hal_sleep_pulldown_dis(hal, gpio_num) gpio_ll_sleep_pulldown_dis((hal)->dev, gpio_num)
+
+/**
+  * @brief Is pull-down enabled on GPIO when system sleep.
+  *
+  * @param hal Context of the HAL layer
+  * @param gpio_num GPIO number
+  */
+#define gpio_hal_sleep_pulldown_is_enabled(hal, gpio_num) gpio_ll_sleep_pulldown_is_enabled((hal)->dev, gpio_num)
 
 /**
   * @brief Enable sleep select on GPIO.
@@ -401,6 +480,15 @@ void gpio_hal_intr_disable(gpio_hal_context_t *hal, uint32_t gpio_num);
 #define gpio_hal_sleep_sel_dis(hal, gpio_num) gpio_ll_sleep_sel_dis((hal)->dev, gpio_num)
 
 /**
+  * @brief Return slp-sel status on GPIO.
+  *
+  * @param hw Peripheral GPIO hardware instance address.
+  * @param gpio_num GPIO number
+  * @return true for enabled
+  */
+#define gpio_hal_sleep_sel_is_enabled(hal, gpio_num) gpio_ll_sleep_sel_is_enabled((hal)->dev, gpio_num)
+
+/**
   * @brief Disable input mode on GPIO when system sleep.
   *
   * @param hal Context of the HAL layer
@@ -417,6 +505,15 @@ void gpio_hal_intr_disable(gpio_hal_context_t *hal, uint32_t gpio_num);
 #define gpio_hal_sleep_input_enable(hal, gpio_num) gpio_ll_sleep_input_enable((hal)->dev, gpio_num)
 
 /**
+  * @brief Is GPIO input enabled in sleep mode.
+  *
+  * @param hw Peripheral GPIO hardware instance address.
+  * @param gpio_num GPIO number
+  * @return true for enabled
+  */
+#define gpio_hal_sleep_input_is_enable(hal, gpio_num) gpio_ll_sleep_input_is_enabled((hal)->dev, gpio_num)
+
+/**
   * @brief Disable output mode on GPIO when system sleep.
   *
   * @param hal Context of the HAL layer
@@ -431,6 +528,15 @@ void gpio_hal_intr_disable(gpio_hal_context_t *hal, uint32_t gpio_num);
   * @param gpio_num GPIO number
   */
 #define gpio_hal_sleep_output_enable(hal, gpio_num) gpio_ll_sleep_output_enable((hal)->dev, gpio_num)
+
+/**
+  * @brief Is GPIO output enabled in sleep mode.
+  *
+  * @param hw Peripheral GPIO hardware instance address.
+  * @param gpio_num GPIO number
+  * @return true for enabled
+  */
+#define gpio_hal_sleep_output_is_enable(hal, gpio_num) gpio_ll_sleep_output_is_enabled((hal)->dev, gpio_num)
 
 #if CONFIG_GPIO_ESP32_SUPPORT_SWITCH_SLP_PULL
 /**
