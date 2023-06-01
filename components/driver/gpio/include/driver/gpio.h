@@ -94,6 +94,19 @@ esp_err_t gpio_reset_pin(gpio_num_t gpio_num);
 esp_err_t gpio_set_intr_type(gpio_num_t gpio_num, gpio_int_type_t intr_type);
 
 /**
+ * @brief  Get GPIO interrupt trigger type
+ *
+ * @param  gpio_num GPIO number.
+ * @param  p_intr_type Pointer to get current interrupt type
+ *
+ * @return
+ *     - ESP_OK  Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ *
+ */
+esp_err_t gpio_get_intr_type(gpio_num_t gpio_num, gpio_int_type_t *p_intr_type);
+
+/**
  * @brief  Enable GPIO module interrupt signal
  *
  * @note ESP32: Please do not use the interrupt of GPIO36 and GPIO39 when using ADC or Wi-Fi and Bluetooth with sleep mode enabled.
@@ -169,6 +182,23 @@ int gpio_get_level(gpio_num_t gpio_num);
 esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
 
 /**
+ * @brief    GPIO get direction
+ *
+ * Get current GPIO direction settings
+ *
+ * @param  gpio_num  Configure GPIO pins number, it should be GPIO number. If
+ * you want to set direction of e.g. GPIO16, gpio_num should be GPIO_NUM_16
+ * (16);
+ * @param  p_mode Pointer to accept GPIO direction
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG GPIO error
+ *
+ */
+esp_err_t gpio_get_direction(gpio_num_t gpio_num, gpio_mode_t *p_mode);
+
+/**
  * @brief  Configure GPIO pull-up/pull-down resistors
  *
  * @note ESP32: Only pins that support both input & output have integrated pull-up and pull-down resistors. Input-only GPIOs 34-39 do not.
@@ -182,6 +212,21 @@ esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
  *
  */
 esp_err_t gpio_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull);
+
+/**
+ * @brief  Get GPIO pull-up/pull-down status
+ *
+ * @note ESP32: Only pins that support both input & output have integrated pull-up and pull-down resistors. Input-only GPIOs 34-39 do not.
+ *
+ * @param  gpio_num GPIO number. If you want to set pull up or down mode for e.g. GPIO16, gpio_num should be GPIO_NUM_16 (16);
+ * @param  p_pull Pointer to receive current pull mode
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG : Parameter error
+ *
+ */
+esp_err_t gpio_get_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t* p_pull);
 
 /**
  * @brief Enable GPIO wake-up function.
@@ -206,6 +251,18 @@ esp_err_t gpio_wakeup_enable(gpio_num_t gpio_num, gpio_int_type_t intr_type);
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t gpio_wakeup_disable(gpio_num_t gpio_num);
+
+/**
+ * @brief Check GPIO wake-up function.
+ *
+ * @param gpio_num GPIO number
+ * @param p_en Pointer to accept whether wakeup is enabled on GPIO
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ */
+esp_err_t gpio_wakeup_is_enabled(gpio_num_t gpio_num, bool *p_en);
 
 /**
  * @brief   Register GPIO interrupt handler, the handler is an ISR.
@@ -256,6 +313,18 @@ esp_err_t gpio_pullup_en(gpio_num_t gpio_num);
 esp_err_t gpio_pullup_dis(gpio_num_t gpio_num);
 
 /**
+  * @brief Check pull-up status on GPIO.
+  *
+  * @param gpio_num GPIO number
+  * @param p_en Pointer to accept current GPIO pull-up mode
+  *
+  * @return
+  *     - ESP_OK Success
+  *     - ESP_ERR_INVALID_ARG Parameter error
+  */
+esp_err_t gpio_pullup_is_enabled(gpio_num_t gpio_num, bool *p_en);
+
+/**
   * @brief Enable pull-down on GPIO.
   *
   * @param gpio_num GPIO number
@@ -276,6 +345,18 @@ esp_err_t gpio_pulldown_en(gpio_num_t gpio_num);
   *     - ESP_ERR_INVALID_ARG Parameter error
   */
 esp_err_t gpio_pulldown_dis(gpio_num_t gpio_num);
+
+/**
+  * @brief Check pull-down status on GPIO.
+  *
+  * @param gpio_num GPIO number
+  * @param p_en Pointer to accept current GPIO pull-down mode
+  *
+  * @return
+  *     - ESP_OK Success
+  *     - ESP_ERR_INVALID_ARG Parameter error
+  */
+esp_err_t gpio_pulldown_is_enabled(gpio_num_t gpio_num, bool *p_en);
 
 /**
   * @brief Install the GPIO driver's ETS_GPIO_INTR_SOURCE ISR handler service, which allows per-pin GPIO interrupt handlers.
@@ -407,6 +488,18 @@ esp_err_t gpio_hold_en(gpio_num_t gpio_num);
   */
 esp_err_t gpio_hold_dis(gpio_num_t gpio_num);
 
+/**
+  * @brief Check whether gpio pad has been held
+  *
+  * @param gpio_num GPIO number, only support output-capable GPIOs
+  * @param p_en Pointer to accept current holding status.
+  *
+  * @return
+  *     - ESP_OK Success
+  *     - ESP_ERR_NOT_SUPPORTED Not support pad hold function
+  */
+esp_err_t gpio_hold_is_enabled(gpio_num_t gpio_num, bool *p_en);
+
 #if !SOC_GPIO_SUPPORT_HOLD_SINGLE_IO_IN_DSLP
 /**
   * @brief Enable all digital gpio pads hold function during Deep-sleep.
@@ -426,6 +519,11 @@ void gpio_deep_sleep_hold_en(void);
   * @brief Disable all digital gpio pads hold function during Deep-sleep.
   */
 void gpio_deep_sleep_hold_dis(void);
+
+/**
+  * @brief Is digital gpio pads hold function enabled during Deep-sleep.
+  */
+void gpio_deep_sleep_hold_is_enabled(bool *p_en);
 #endif //!SOC_GPIO_SUPPORT_HOLD_SINGLE_IO_IN_DSLP
 
 /**
@@ -485,6 +583,16 @@ esp_err_t gpio_sleep_sel_en(gpio_num_t gpio_num);
 esp_err_t gpio_sleep_sel_dis(gpio_num_t gpio_num);
 
 /**
+  * @brief Check SLP_SEL status on GPIO.
+  * @param gpio_num GPIO number of the pad.
+  * @param p_en     Pointer to accept current SLP_SEL status
+  *
+  * @return
+  *     - ESP_OK Success
+  */
+esp_err_t gpio_sleep_sel_is_enabled(gpio_num_t gpio_num, bool *p_en);
+
+/**
  * @brief    GPIO set direction at sleep
  *
  * Configure GPIO direction,such as output_only,input_only,output_and_input
@@ -499,6 +607,18 @@ esp_err_t gpio_sleep_sel_dis(gpio_num_t gpio_num);
 esp_err_t gpio_sleep_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
 
 /**
+ * @brief Get current GPIO direction at sleep
+ *
+ * @param  gpio_num  Configure GPIO pins number, it should be GPIO number. If you want to set direction of e.g. GPIO16, gpio_num should be GPIO_NUM_16 (16);
+ * @param  p_mode Pointer to accept current GPIO direction in sleep. true for enabled
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG GPIO error
+ */
+esp_err_t gpio_sleep_get_direction(gpio_num_t gpio_num, gpio_mode_t *p_mode);
+
+/**
  * @brief  Configure GPIO pull-up/pull-down resistors at sleep
  *
  * @note ESP32: Only pins that support both input & output have integrated pull-up and pull-down resistors. Input-only GPIOs 34-39 do not.
@@ -511,6 +631,18 @@ esp_err_t gpio_sleep_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
  *     - ESP_ERR_INVALID_ARG : Parameter error
  */
 esp_err_t gpio_sleep_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull);
+
+/**
+ * @brief  Get current GPIO pull-up/pull-down resistors at sleep
+ *
+ * @param  gpio_num GPIO number. If you want to set pull up or down mode for e.g. GPIO16, gpio_num should be GPIO_NUM_16 (16);
+ * @param  p_pull Pointer to current GPIO pull up/down mode.
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG : Parameter error
+ */
+esp_err_t gpio_sleep_get_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t *p_pull);
 
 #if SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP
 

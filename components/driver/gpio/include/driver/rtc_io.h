@@ -104,6 +104,18 @@ esp_err_t rtc_gpio_set_level(gpio_num_t gpio_num, uint32_t level);
 esp_err_t rtc_gpio_set_direction(gpio_num_t gpio_num, rtc_gpio_mode_t mode);
 
 /**
+ * @brief RTC GPIO get direction statatus
+ *
+ * @param gpio_num GPIO number, only support output GPIOs
+ * @param p_mode Pointer to accept the current status.
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ */
+esp_err_t rtc_gpio_get_direction(gpio_num_t gpio_num, rtc_gpio_mode_t *p_mode);
+
+/**
  * @brief RTC GPIO set direction in deep sleep mode or disable sleep status (default).
  *        In some application scenarios, IO needs to have another states during deep sleep.
  *
@@ -120,6 +132,18 @@ esp_err_t rtc_gpio_set_direction(gpio_num_t gpio_num, rtc_gpio_mode_t mode);
 esp_err_t rtc_gpio_set_direction_in_sleep(gpio_num_t gpio_num, rtc_gpio_mode_t mode);
 
 /**
+ * @brief RTC GPIO get direction in deep sleep mode
+ *
+ * @param gpio_num GPIO number, only support output GPIOs
+ * @param p_mode Pointer to accept the current status.
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ */
+esp_err_t rtc_gpio_get_direction_in_sleep(gpio_num_t gpio_num, rtc_gpio_mode_t* p_mode);
+
+/**
  * @brief  RTC GPIO pullup enable
  *
  * This function only works for RTC IOs. In general, call gpio_pullup_en,
@@ -132,6 +156,18 @@ esp_err_t rtc_gpio_set_direction_in_sleep(gpio_num_t gpio_num, rtc_gpio_mode_t m
  *     - ESP_ERR_INVALID_ARG GPIO is not an RTC IO
  */
 esp_err_t rtc_gpio_pullup_en(gpio_num_t gpio_num);
+
+/**
+ * @brief Get RTC GPIO pull-up mode
+ *
+ * @param gpio_num GPIO number, only support output GPIOs
+ * @param p_en Pointer to accept the result. true for enabled
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ */
+esp_err_t rtc_gpio_pullup_is_enabled(gpio_num_t gpio_num, bool *p_en);
 
 /**
  * @brief  RTC GPIO pulldown enable
@@ -174,6 +210,18 @@ esp_err_t rtc_gpio_pullup_dis(gpio_num_t gpio_num);
  *     - ESP_ERR_INVALID_ARG GPIO is not an RTC IO
  */
 esp_err_t rtc_gpio_pulldown_dis(gpio_num_t gpio_num);
+
+/**
+ * @brief Get RTC GPIO pull-down mode
+ *
+ * @param gpio_num GPIO number, only support output GPIOs
+ * @param p_en Pointer to accept the result. true for enabled
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ */
+esp_err_t rtc_gpio_pulldown_is_enabled(gpio_num_t gpio_num, bool* p_en);
 
 /**
  * @brief Set RTC GPIO pad drive capability
@@ -245,6 +293,17 @@ esp_err_t rtc_gpio_hold_en(gpio_num_t gpio_num);
 esp_err_t rtc_gpio_hold_dis(gpio_num_t gpio_num);
 
 /**
+ * @brief Is hold function enabled on an RTC IO pad
+ *
+ * @param gpio_num GPIO number (e.g. GPIO_NUM_12)
+ * @param p_en     Assigned to true if enabled
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG GPIO is not an RTC IO
+ */
+esp_err_t rtc_gpio_hold_is_enabled(gpio_num_t gpio_num, bool *p_en);
+
+/**
  * @brief Enable force hold signal for all RTC IOs
  *
  * Each RTC pad has a "force hold" input signal from the RTC controller.
@@ -304,6 +363,17 @@ esp_err_t rtc_gpio_wakeup_enable(gpio_num_t gpio_num, gpio_int_type_t intr_type)
  *      - ESP_ERR_INVALID_ARG if gpio_num is not an RTC IO
  */
 esp_err_t rtc_gpio_wakeup_disable(gpio_num_t gpio_num);
+
+/**
+ * @brief Get wakeup from sleep mode of specific GPIO
+ * @param gpio_num  GPIO number
+ * @param p_intr_type  Pointer to accept current wakeup type
+ * @return
+ *      - ESP_OK on success
+ *      - ESP_ERR_INVALID_ARG if gpio_num is not an RTC IO, or intr_type is not
+ *        one of GPIO_INTR_HIGH_LEVEL, GPIO_INTR_LOW_LEVEL.
+ */
+esp_err_t rtc_gpio_wakeup_get_enable_type(gpio_num_t gpio_num, gpio_int_type_t *p_intr_type);
 
 #endif // SOC_RTCIO_WAKE_SUPPORTED
 

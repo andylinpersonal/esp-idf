@@ -110,12 +110,44 @@ esp_err_t rtc_gpio_set_direction(gpio_num_t gpio_num, rtc_gpio_mode_t mode)
     return ESP_OK;
 }
 
+esp_err_t rtc_gpio_get_direction(gpio_num_t gpio_num, rtc_gpio_mode_t *p_mode)
+{
+    ESP_RETURN_ON_FALSE(rtc_gpio_is_valid_gpio(gpio_num), ESP_ERR_INVALID_ARG, RTCIO_TAG, "RTCIO number error");
+    if (p_mode) {
+        RTCIO_ENTER_CRITICAL();
+        *p_mode = rtcio_hal_get_direction(rtc_io_number_get(gpio_num));
+        RTCIO_EXIT_CRITICAL();
+    }
+
+    return ESP_OK;
+}
+
 esp_err_t rtc_gpio_set_direction_in_sleep(gpio_num_t gpio_num, rtc_gpio_mode_t mode)
 {
     ESP_RETURN_ON_FALSE(rtc_gpio_is_valid_gpio(gpio_num), ESP_ERR_INVALID_ARG, RTCIO_TAG, "RTCIO number error");
     RTCIO_ENTER_CRITICAL();
     rtcio_hal_set_direction_in_sleep(rtc_io_number_get(gpio_num), mode);
     RTCIO_EXIT_CRITICAL();
+
+    return ESP_OK;
+}
+
+esp_err_t rtc_gpio_get_direction_in_sleep(gpio_num_t gpio_num, rtc_gpio_mode_t *p_mode)
+{
+    ESP_RETURN_ON_FALSE(rtc_gpio_is_valid_gpio(gpio_num), ESP_ERR_INVALID_ARG, RTCIO_TAG, "RTCIO number error");
+    if (p_mode) {
+        RTCIO_ENTER_CRITICAL();
+        bool slp_io_mode_en = rtcio_hal_sleep_setting_is_enabled(gpio_num);
+        rtc_gpio_mode_t mode =
+            rtcio_hal_get_direction_in_sleep(rtc_io_number_get(gpio_num));
+        RTCIO_EXIT_CRITICAL();
+
+        if (slp_io_mode_en) {
+            *p_mode = mode;
+        } else {
+            ESP_LOGI(RTCIO_TAG, "Sleep setting not enabled yet.");
+        }
+    }
 
     return ESP_OK;
 }
@@ -137,6 +169,17 @@ esp_err_t rtc_gpio_pullup_dis(gpio_num_t gpio_num)
     rtcio_hal_pullup_disable(rtc_io_number_get(gpio_num));
     RTCIO_EXIT_CRITICAL();
 
+    return ESP_OK;
+}
+
+esp_err_t rtc_gpio_pullup_is_enabled(gpio_num_t gpio_num, bool* p_en)
+{
+    ESP_RETURN_ON_FALSE(rtc_gpio_is_valid_gpio(gpio_num), ESP_ERR_INVALID_ARG, RTCIO_TAG, "RTCIO number error");
+    if (p_en) {
+        RTCIO_ENTER_CRITICAL();
+        *p_en = rtcio_hal_pullup_is_enabled(rtc_io_number_get(gpio_num));
+        RTCIO_EXIT_CRITICAL();
+    }
     return ESP_OK;
 }
 
@@ -170,6 +213,17 @@ esp_err_t rtc_gpio_iomux_func_sel(gpio_num_t gpio_num, int func)
     return ESP_OK;
 }
 
+esp_err_t rtc_gpio_pulldown_is_enabled(gpio_num_t gpio_num, bool* p_en)
+{
+    ESP_RETURN_ON_FALSE(rtc_gpio_is_valid_gpio(gpio_num), ESP_ERR_INVALID_ARG, RTCIO_TAG, "RTCIO number error");
+    RTCIO_ENTER_CRITICAL();
+    if (p_en) {
+        *p_en = rtcio_hal_pulldown_is_enabled(rtc_io_number_get(gpio_num));
+    }
+    RTCIO_EXIT_CRITICAL();
+    return ESP_OK;
+}
+
 #endif // SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
 
 #if SOC_RTCIO_HOLD_SUPPORTED
@@ -189,6 +243,17 @@ esp_err_t rtc_gpio_hold_dis(gpio_num_t gpio_num)
     RTCIO_ENTER_CRITICAL();
     rtcio_hal_hold_disable(rtc_io_number_get(gpio_num));
     RTCIO_EXIT_CRITICAL();
+    return ESP_OK;
+}
+
+esp_err_t rtc_gpio_hold_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    ESP_RETURN_ON_FALSE(rtc_gpio_is_valid_gpio(gpio_num), ESP_ERR_INVALID_ARG, RTCIO_TAG, "RTCIO number error");
+    if (p_en != NULL) {
+        RTCIO_ENTER_CRITICAL();
+        *p_en = rtcio_hal_force_hold_is_enabled(rtc_io_number_get(gpio_num));
+        RTCIO_EXIT_CRITICAL();
+    }
     return ESP_OK;
 }
 
@@ -243,6 +308,17 @@ esp_err_t rtc_gpio_wakeup_disable(gpio_num_t gpio_num)
     RTCIO_ENTER_CRITICAL();
     rtcio_hal_wakeup_disable(rtc_io_number_get(gpio_num));
     RTCIO_EXIT_CRITICAL();
+    return ESP_OK;
+}
+
+esp_err_t rtc_gpio_wakeup_get_enable_type(gpio_num_t gpio_num, gpio_int_type_t *p_intr_type)
+{
+    ESP_RETURN_ON_FALSE(rtc_gpio_is_valid_gpio(gpio_num), ESP_ERR_INVALID_ARG, RTCIO_TAG, "RTCIO number error");
+    if (p_intr_type) {
+        RTCIO_ENTER_CRITICAL();
+        *p_intr_type = rtcio_hal_wakeup_get_enable_type(rtc_io_number_get(gpio_num));
+        RTCIO_EXIT_CRITICAL();
+    }
     return ESP_OK;
 }
 

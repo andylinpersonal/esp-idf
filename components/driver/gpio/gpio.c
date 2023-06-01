@@ -111,6 +111,27 @@ esp_err_t gpio_pullup_dis(gpio_num_t gpio_num)
     return ESP_OK;
 }
 
+esp_err_t gpio_pullup_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+
+    if (!rtc_gpio_is_valid_gpio(gpio_num) || SOC_GPIO_SUPPORT_RTC_INDEPENDENT) {
+        if (p_en) {
+            portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+            *p_en = gpio_hal_pullup_is_enabled(gpio_context.gpio_hal, gpio_num);
+            portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+        }
+    } else {
+#if SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
+        return rtc_gpio_pullup_is_enabled(gpio_num, p_en);
+#else
+        abort(); // This should be eliminated as unreachable, unless a programming error has occured
+#endif
+    }
+
+    return ESP_OK;
+}
+
 esp_err_t gpio_pulldown_en(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -149,6 +170,27 @@ esp_err_t gpio_pulldown_dis(gpio_num_t gpio_num)
     return ESP_OK;
 }
 
+esp_err_t gpio_pulldown_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+
+    if (!rtc_gpio_is_valid_gpio(gpio_num) || SOC_GPIO_SUPPORT_RTC_INDEPENDENT) {
+        if (p_en) {
+            portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+            *p_en = gpio_hal_pulldown_is_enabled(gpio_context.gpio_hal, gpio_num);
+            portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+        }
+    } else {
+#if SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
+        return rtc_gpio_pulldown_is_enabled(gpio_num, p_en);
+#else
+        abort(); // This should be eliminated as unreachable, unless a programming error has occured
+#endif
+    }
+
+    return ESP_OK;
+}
+
 esp_err_t gpio_set_intr_type(gpio_num_t gpio_num, gpio_int_type_t intr_type)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -162,6 +204,18 @@ esp_err_t gpio_set_intr_type(gpio_num_t gpio_num, gpio_int_type_t intr_type)
         gpio_context.isr_clr_on_entry_mask &= ~(1ULL << (gpio_num));
     }
     portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+    return ESP_OK;
+}
+
+esp_err_t gpio_get_intr_type(gpio_num_t gpio_num, gpio_int_type_t *p_intr_type)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+
+    if (p_intr_type) {
+        portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+        *p_intr_type = gpio_hal_get_intr_type(gpio_context.gpio_hal, gpio_num);
+        portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+    }
     return ESP_OK;
 }
 
@@ -203,6 +257,14 @@ static esp_err_t gpio_input_enable(gpio_num_t gpio_num)
     return ESP_OK;
 }
 
+static esp_err_t gpio_input_is_enabled(gpio_num_t gpio_num, bool *p_en) {
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+    if (p_en) {
+        *p_en = gpio_hal_input_is_enabled(gpio_context.gpio_hal, gpio_num);
+    }
+    return ESP_OK;
+}
+
 static esp_err_t gpio_output_disable(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -218,6 +280,14 @@ static esp_err_t gpio_output_enable(gpio_num_t gpio_num)
     return ESP_OK;
 }
 
+static esp_err_t gpio_output_is_enabled(gpio_num_t gpio_num, bool *p_en) {
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+    if (p_en) {
+        *p_en = gpio_hal_output_is_enabled(gpio_context.gpio_hal, gpio_num);
+    }
+    return ESP_OK;
+}
+
 static esp_err_t gpio_od_disable(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -229,6 +299,14 @@ static esp_err_t gpio_od_enable(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
     gpio_hal_od_enable(gpio_context.gpio_hal, gpio_num);
+    return ESP_OK;
+}
+
+static esp_err_t gpio_od_is_enabled(gpio_num_t gpio_num, bool *p_en) {
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+    if (p_en) {
+        *p_en = gpio_hal_od_is_enabled(gpio_context.gpio_hal, gpio_num);
+    }
     return ESP_OK;
 }
 
@@ -300,6 +378,29 @@ esp_err_t gpio_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull)
     return ret;
 }
 
+esp_err_t gpio_get_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t *p_pull)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+    esp_err_t ret = ESP_OK;
+
+    if (p_pull) {
+        bool pu = false;
+        bool pd = false;
+
+        ESP_RETURN_ON_ERROR(gpio_pullup_is_enabled(gpio_num, &pu), GPIO_TAG, "failed to read pull up status.");
+        ESP_RETURN_ON_ERROR(gpio_pulldown_is_enabled(gpio_num, &pd), GPIO_TAG,
+                            "failed to read pull down status.");
+
+        if (pu) {
+            *p_pull = pd ? GPIO_PULLUP_PULLDOWN : GPIO_PULLUP_ONLY;
+        } else {
+            *p_pull = pd ? GPIO_PULLDOWN_ONLY : GPIO_FLOATING;
+        }
+    }
+
+    return ret;
+}
+
 esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -330,6 +431,37 @@ esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode)
     }
 
     return ret;
+}
+
+esp_err_t gpio_get_direction(gpio_num_t gpio_num, gpio_mode_t *p_mode)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+
+    if (p_mode) {
+        *p_mode = GPIO_MODE_DISABLE;
+
+        bool ie = false;
+        bool oe = false;
+        bool od = false;
+
+        ESP_RETURN_ON_ERROR(gpio_input_is_enabled(gpio_num, &ie), GPIO_TAG, "failed to check IE");
+        ESP_RETURN_ON_ERROR(gpio_output_is_enabled(gpio_num, &oe), GPIO_TAG, "failed to check OE");
+        ESP_RETURN_ON_ERROR(gpio_od_is_enabled(gpio_num, &oe), GPIO_TAG, "failed to check OD mode");
+
+        if (ie) {
+            *p_mode |= GPIO_MODE_DEF_INPUT;
+        }
+
+        if (oe) {
+            *p_mode |= GPIO_MODE_DEF_OUTPUT;
+        }
+
+        if (od) {
+            *p_mode |= GPIO_MODE_DEF_OD;
+        }
+    }
+
+    return ESP_OK;
 }
 
 esp_err_t gpio_config(const gpio_config_t *pGPIOConfig)
@@ -657,6 +789,33 @@ esp_err_t gpio_wakeup_disable(gpio_num_t gpio_num)
     return ret;
 }
 
+esp_err_t gpio_wakeup_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+    esp_err_t ret = ESP_OK;
+#if SOC_RTCIO_WAKE_SUPPORTED
+    if (rtc_gpio_is_valid_gpio(gpio_num)) {
+        if (p_en) {
+            gpio_int_type_t intr = GPIO_INTR_DISABLE;
+            ret = rtc_gpio_wakeup_get_enable_type(gpio_num, &intr);
+            if (ret != ESP_OK) {
+                return ret;
+            }
+            *p_en = intr != GPIO_INTR_DISABLE;
+        }
+    }
+#endif
+    if (p_en) {
+        portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+        *p_en = gpio_hal_wakeup_is_enabled(gpio_context.gpio_hal, gpio_num);
+#if CONFIG_ESP_SLEEP_GPIO_RESET_WORKAROUND || CONFIG_PM_SLP_DISABLE_GPIO
+        *p_en &= gpio_hal_sleep_sel_is_enabled(gpio_context.gpio_hal, gpio_num);
+#endif
+        portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+    }
+    return ret;
+}
+
 esp_err_t gpio_set_drive_capability(gpio_num_t gpio_num, gpio_drive_cap_t strength)
 {
     GPIO_CHECK(GPIO_IS_VALID_OUTPUT_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -739,6 +898,28 @@ esp_err_t gpio_hold_dis(gpio_num_t gpio_num)
     return ret;
 }
 
+esp_err_t gpio_hold_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    GPIO_CHECK(GPIO_IS_VALID_OUTPUT_GPIO(gpio_num), "Only output-capable GPIO support this function", ESP_ERR_NOT_SUPPORTED);
+    int ret = ESP_OK;
+
+    if (rtc_gpio_is_valid_gpio(gpio_num)) {
+#if SOC_RTCIO_HOLD_SUPPORTED
+        ret = rtc_gpio_hold_is_enabled(gpio_num, p_en);
+#endif
+    }else if (GPIO_HOLD_MASK[gpio_num]) {
+        if (p_en) {
+            portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+            *p_en = gpio_hal_is_digital_io_hold(gpio_context.gpio_hal, gpio_num);
+            portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+        }
+    } else {
+        ret = ESP_ERR_NOT_SUPPORTED;
+    }
+
+    return ret;
+}
+
 #if !SOC_GPIO_SUPPORT_HOLD_SINGLE_IO_IN_DSLP
 void gpio_deep_sleep_hold_en(void)
 {
@@ -752,6 +933,15 @@ void gpio_deep_sleep_hold_dis(void)
     portENTER_CRITICAL(&gpio_context.gpio_spinlock);
     gpio_hal_deep_sleep_hold_dis(gpio_context.gpio_hal);
     portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+}
+
+void gpio_deep_sleep_hold_is_enabled(bool *p_en)
+{
+    if (p_en) {
+        portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+        *p_en = gpio_hal_deep_sleep_hold_is_en(gpio_context.gpio_hal);
+        portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+    }
 }
 #endif //!SOC_GPIO_SUPPORT_HOLD_SINGLE_IO_IN_DSLP
 
@@ -811,6 +1001,19 @@ static esp_err_t gpio_sleep_pullup_dis(gpio_num_t gpio_num)
     return ESP_OK;
 }
 
+static esp_err_t gpio_sleep_pullup_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+
+    if (p_en) {
+        portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+        *p_en = gpio_hal_sleep_pullup_is_enabled(gpio_context.gpio_hal, gpio_num);
+        portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+    }
+
+    return ESP_OK;
+}
+
 static esp_err_t gpio_sleep_pulldown_en(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -833,6 +1036,19 @@ static esp_err_t gpio_sleep_pulldown_dis(gpio_num_t gpio_num)
     return ESP_OK;
 }
 
+static esp_err_t gpio_sleep_pulldown_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+
+    if (p_en) {
+        portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+        *p_en = gpio_hal_sleep_pulldown_is_enabled(gpio_context.gpio_hal, gpio_num);
+        portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+    }
+
+    return ESP_OK;
+}
+
 static esp_err_t gpio_sleep_input_disable(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -847,6 +1063,15 @@ static esp_err_t gpio_sleep_input_enable(gpio_num_t gpio_num)
     return ESP_OK;
 }
 
+static esp_err_t gpio_sleep_input_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+    if (p_en) {
+        *p_en = gpio_hal_sleep_input_is_enable(gpio_context.gpio_hal, gpio_num);
+    }
+    return ESP_OK;
+}
+
 static esp_err_t gpio_sleep_output_disable(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -858,6 +1083,15 @@ static esp_err_t gpio_sleep_output_enable(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_OUTPUT_GPIO(gpio_num), "GPIO output gpio_num error", ESP_ERR_INVALID_ARG);
     gpio_hal_sleep_output_enable(gpio_context.gpio_hal, gpio_num);
+    return ESP_OK;
+}
+
+static esp_err_t gpio_sleep_output_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+    if (p_en) {
+        *p_en = gpio_hal_sleep_output_is_enable(gpio_context.gpio_hal, gpio_num);
+    }
     return ESP_OK;
 }
 
@@ -885,6 +1119,31 @@ esp_err_t gpio_sleep_set_direction(gpio_num_t gpio_num, gpio_mode_t mode)
     }
 
     return ret;
+}
+
+esp_err_t gpio_sleep_get_direction(gpio_num_t gpio_num, gpio_mode_t *p_mode)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+
+    if (p_mode) {
+        *p_mode = GPIO_MODE_DISABLE;
+
+        bool ie = false;
+        bool oe = false;
+
+        ESP_RETURN_ON_ERROR(gpio_sleep_input_is_enabled(gpio_num, &ie), GPIO_TAG, "failed to check IE");
+        ESP_RETURN_ON_ERROR(gpio_sleep_output_is_enabled(gpio_num, &oe), GPIO_TAG, "failed to check OE");
+
+        if (ie) {
+            *p_mode |= GPIO_MODE_DEF_INPUT;
+        }
+
+        if (oe) {
+            *p_mode |= GPIO_MODE_DEF_OUTPUT;
+        }
+    }
+
+    return ESP_OK;
 }
 
 esp_err_t gpio_sleep_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull)
@@ -923,6 +1182,28 @@ esp_err_t gpio_sleep_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull)
     return ret;
 }
 
+esp_err_t gpio_sleep_get_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t *p_pull)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
+    esp_err_t ret = ESP_OK;
+
+    if (p_pull) {
+        bool pu = false;
+        bool pd = false;
+
+        ESP_RETURN_ON_ERROR(gpio_sleep_pullup_is_enabled(gpio_num, &pu), GPIO_TAG, "failed to read pull up status.");
+        ESP_RETURN_ON_ERROR(gpio_sleep_pulldown_is_enabled(gpio_num, &pd), GPIO_TAG, "failed to read pull down status.");
+
+        if (pu) {
+            *p_pull = pd ? GPIO_PULLUP_PULLDOWN : GPIO_PULLUP_ONLY;
+        } else {
+            *p_pull = pd ? GPIO_PULLDOWN_ONLY : GPIO_FLOATING;
+        }
+    }
+
+    return ret;
+}
+
 esp_err_t gpio_sleep_sel_en(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -941,6 +1222,20 @@ esp_err_t gpio_sleep_sel_dis(gpio_num_t gpio_num)
     portENTER_CRITICAL(&gpio_context.gpio_spinlock);
     gpio_hal_sleep_sel_dis(gpio_context.gpio_hal, gpio_num);
     portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+
+    return ESP_OK;
+}
+
+esp_err_t gpio_sleep_sel_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error",
+               ESP_ERR_INVALID_ARG);
+
+    if (p_en) {
+        portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+        *p_en = gpio_hal_sleep_sel_is_enabled(gpio_context.gpio_hal, gpio_num);
+        portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+    }
 
     return ESP_OK;
 }
@@ -993,6 +1288,23 @@ esp_err_t gpio_deep_sleep_wakeup_disable(gpio_num_t gpio_num)
     gpio_hal_sleep_sel_en(gpio_context.gpio_hal, gpio_num);
 #endif
     portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+    return ESP_OK;
+}
+
+esp_err_t gpio_deep_sleep_wakeup_is_enabled(gpio_num_t gpio_num, bool *p_en)
+{
+    if (!GPIO_IS_DEEP_SLEEP_WAKEUP_VALID_GPIO(gpio_num)) {
+        ESP_LOGE(GPIO_TAG, "GPIO %d does not support deep sleep wakeup", gpio_num);
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (p_en) {
+        portENTER_CRITICAL(&gpio_context.gpio_spinlock);
+        *p_en = gpio_hal_deepsleep_wakeup_is_enabled(gpio_context.gpio_hal, gpio_num);
+#if CONFIG_ESP_SLEEP_GPIO_RESET_WORKAROUND || CONFIG_PM_SLP_DISABLE_GPIO
+        *p_en &= gpio_hal_sleep_sel_is_enabled(gpio_context.gpio_hal, gpio_num);
+#endif
+        portEXIT_CRITICAL(&gpio_context.gpio_spinlock);
+    }
     return ESP_OK;
 }
 #endif // SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP
