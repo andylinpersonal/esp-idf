@@ -44,5 +44,6 @@ SECTIONS
         *(.sbss*)
     } >ram
 
+    __stack_limit = .;
     __stack_top = ORIGIN(ram) + LENGTH(ram);
 }
