@@ -56,6 +56,7 @@ function(ulp_embed_binary app_name s_sources exp_dep_srcs)
                 BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${app_name}
                 INSTALL_COMMAND ""
                 CMAKE_ARGS  -DCMAKE_GENERATOR=${CMAKE_GENERATOR}
+                            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
                             -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FLAG}
                             -DULP_S_SOURCES=$<TARGET_PROPERTY:${app_name},ULP_SOURCES>
                             -DULP_APP_NAME=${app_name}
