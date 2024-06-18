@@ -145,6 +145,7 @@
   - "components/bt/controller/lib_esp32c5/esp32c5-bt-lib"
   - "components/bt/esp_ble_mesh/lib/lib"
   - ".gitmodules"
+  - "components/ulp/lp_core/lp_core/freertos/FreeRTOS-Kernel"
 
 .patterns-idf-pytest-plugin: &patterns-idf-pytest-plugin
   - "tools/ci/idf_pytest/**/*"

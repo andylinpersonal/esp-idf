@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include <stdarg.h>
+#include <string.h>
 #include "sdkconfig.h"
 #include "ulp_lp_core_uart.h"
 
@@ -273,6 +274,30 @@ int lp_core_printf(const char* format, ...)
     va_end(ap);
 
     return ret;
+}
+
+void lp_core_print_str(const char *str)
+{
+    lp_core_uart_write_bytes(LP_UART_NUM_0, str, strlen(str), -1);
+}
+
+void lp_core_print_hex(int h)
+{
+    char x;
+    char c;
+
+    // Does not print '0x', only the digits (8 digits to print)
+    for (x = 0; x < 8; x++) {
+        c = (h >> 28) & 0xf; // extract the leftmost byte
+        if (c < 10) {
+            c = '0' + c;
+            lp_core_uart_write_bytes(LP_UART_NUM_0, &c, 1, -1);
+        } else {
+            c = 'a' + c - 10;
+            lp_core_uart_write_bytes(LP_UART_NUM_0, &c, 1, -1);
+        }
+        h <<= 4; // move the 2nd leftmost byte to the left, to be extracted next
+    }
 }
 
 #endif /* !CONFIG_ULP_ROM_PRINT_ENABLE */

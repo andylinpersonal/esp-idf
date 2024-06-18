@@ -51,7 +51,9 @@ static void ulp_lp_core_default_intr_handler(void)
 void __attribute__((weak, alias("ulp_lp_core_default_intr_handler"))) ulp_lp_core_lp_io_intr_handler(void);
 void __attribute__((weak, alias("ulp_lp_core_default_intr_handler"))) ulp_lp_core_lp_i2c_intr_handler(void);
 void __attribute__((weak, alias("ulp_lp_core_default_intr_handler"))) ulp_lp_core_lp_uart_intr_handler(void);
+#ifndef CONFIG_ULP_LP_CORE_FREERTOS
 void __attribute__((weak, alias("ulp_lp_core_default_intr_handler"))) ulp_lp_core_lp_timer_intr_handler(void);
+#endif
 void __attribute__((weak, alias("ulp_lp_core_default_intr_handler"))) ulp_lp_core_lp_pmu_intr_handler(void);
 void __attribute__((weak, alias("ulp_lp_core_default_intr_handler"))) ulp_lp_core_lp_spi_intr_handler(void);
 void __attribute__((weak, alias("ulp_lp_core_default_intr_handler"))) ulp_lp_core_trng_intr_handler(void);
@@ -71,16 +73,40 @@ void __attribute__((weak, alias("ulp_lp_core_default_intr_handler"))) ulp_lp_cor
 static void* s_intr_handlers[] = {
     ulp_lp_core_lp_io_intr_handler,
     ulp_lp_core_lp_i2c_intr_handler,
+#ifdef CONFIG_ULP_LP_CORE_FREERTOS
+    0, // TODO: Ignored under FreeRTOS due to spurious interrupt...
+    0, // Processed before other interrupts
+#else
     ulp_lp_core_lp_uart_intr_handler,
     ulp_lp_core_lp_timer_intr_handler,
+#endif
     0, // Reserved / Unused
     ulp_lp_core_lp_pmu_intr_handler,
 };
 
+#ifdef CONFIG_ULP_LP_CORE_FREERTOS
+void __attribute__((weak)) ulp_lp_core_lp_timer_intr_handler(void) {}
+
+void ulp_lp_core_lp_timer_intr_handler_wrapper()
+{
+    extern void vSysTickISRHandler(void);
+    extern void vTaskSwitchContext(void);
+    vSysTickISRHandler();
+    ulp_lp_core_lp_timer_intr_handler();
+}
+#endif
+
 void __attribute__((weak)) ulp_lp_core_intr_handler(void)
 {
     uint8_t intr_source = lp_core_ll_get_triggered_interrupt_srcs();
-    for (int i = 0; i < sizeof(s_intr_handlers) / 4; i++) {
+
+#ifdef CONFIG_ULP_LP_CORE_FREERTOS
+    if (intr_source & (1 << 3)) {
+        ulp_lp_core_lp_timer_intr_handler_wrapper();
+    }
+#endif
+
+    for (int i = 0; i < sizeof(s_intr_handlers) / sizeof(void *); i++) {
         if (intr_source & (1 << i)) {
             void (*handler)(void) = s_intr_handlers[i];
             if (handler) {

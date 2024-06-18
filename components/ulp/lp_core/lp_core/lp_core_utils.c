@@ -130,10 +130,14 @@ void ulp_lp_core_stop_lp_core(void)
 
 void __attribute__((noreturn)) abort(void)
 {
+#ifdef CONFIG_ULP_LP_CORE_FREERTOS
+    __asm volatile("ebreak\n\t");
+#else
     /* Stop the LP Core */
     ulp_lp_core_stop_lp_core();
-
-    while (1);
+#endif
+    while (true) {
+    }
 }
 
 void ulp_lp_core_sw_intr_enable(bool enable)

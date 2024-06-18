@@ -5,9 +5,11 @@ set(CMAKE_C_COMPILER "riscv32-esp-elf-gcc")
 set(CMAKE_CXX_COMPILER "riscv32-esp-elf-g++")
 set(CMAKE_ASM_COMPILER "riscv32-esp-elf-gcc")
 
-set(CMAKE_C_FLAGS "-Os -ggdb -march=rv32imac_zicsr_zifencei -mdiv -fdata-sections -ffunction-sections"
+set(CMAKE_C_FLAGS "-Os -ggdb -msave-restore -march=rv32imac_zicsr_zifencei -mdiv \
+                   -fstack-usage -fdata-sections -ffunction-sections"
     CACHE STRING "C Compiler Base Flags")
-set(CMAKE_CXX_FLAGS "-Os -ggdb -march=rv32imac_zicsr_zifencei -mdiv -fdata-sections -ffunction-sections"
+set(CMAKE_CXX_FLAGS "-Os -ggdb -msave-restore -march=rv32imac_zicsr_zifencei -mdiv \
+                     -fstack-usage -fdata-sections -ffunction-sections"
     CACHE STRING "C++ Compiler Base Flags")
 set(CMAKE_ASM_FLAGS "-Os -ggdb -march=rv32imac_zicsr_zifencei -x assembler-with-cpp"
     CACHE STRING "Assembler Base Flags")

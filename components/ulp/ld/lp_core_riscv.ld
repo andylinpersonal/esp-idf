@@ -61,8 +61,14 @@ SECTIONS
         *(.bss*)
         *(.sbss)
         *(.sbss*)
-        PROVIDE(end = .);
-    } >ram
+    } > ram
 
-    __stack_top = ORIGIN(ram) + LENGTH(ram);
+    .stack ALIGN(16) :
+    {
+        *(.stack)
+        *(.stack*)
+        PROVIDE(end = .);
+    } > ram
+
+    __stack_top = (ORIGIN(ram) + LENGTH(ram)) & ~0xF;
 }

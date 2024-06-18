@@ -24,6 +24,8 @@ extern int ets_printf(const char* format, ...);
 //TODO: Change return type from void to int in IDF 6.0
 void lp_core_printf(const char* format, ...);
 #endif /* CONFIG_ULP_ROM_PRINT_ENABLE */
+void lp_core_print_str(const char *str);
+void lp_core_print_hex(int h);
 
 #if CONFIG_ULP_ROM_PRINT_ENABLE
 /**
@@ -35,5 +37,6 @@ void lp_core_printf(const char* format, ...);
  *       powered down during sleep.
  */
 extern void ets_install_uart_printf(void);
+
 #define lp_core_install_uart_print ets_install_uart_printf
 #endif /* CONFIG_ULP_ROM_PRINT_ENABLE */

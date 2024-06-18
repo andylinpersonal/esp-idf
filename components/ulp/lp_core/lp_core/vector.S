@@ -6,6 +6,7 @@
 
 #include "riscv/rvruntime-frames.h"
 #include "soc/soc_caps.h"
+#include "sdkconfig.h"
 
     .equ SAVE_REGS, 32
     .equ CONTEXT_SIZE, (SAVE_REGS * 4)
@@ -92,6 +93,9 @@
     csrw    mepc, t0
 .endm
 
+#ifdef CONFIG_ULP_LP_CORE_FREERTOS
+#define _panic_handler _inner_panic_handler
+#endif
 
 /* _panic_handler: handle all exception */
 	.section	.text.handlers,"ax"
@@ -125,7 +129,7 @@ _end:
 
 
 #if SOC_LP_CORE_SINGLE_INTERRUPT_VECTOR
-
+#ifndef CONFIG_ULP_LP_CORE_FREERTOS
 /* interrupt_handler: handle all interrupt */
     .section	.text.handlers,"ax"
     .global _interrupt_handler
@@ -142,5 +146,5 @@ _interrupt_handler:
     restore_general_regs
     /* exit, this will also re-enable the interrupts */
     mret
-
+#endif // CONFIG_ULP_LP_CORE_FREERTOS
 #endif // SOC_LP_CORE_SINGLE_INTERRUPT_VECTOR

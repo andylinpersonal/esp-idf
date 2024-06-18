@@ -29,16 +29,22 @@ set(ULP_MAP_GEN ${PYTHON} ${IDF_PATH}/components/ulp/esp32ulp_mapgen.py)
 get_filename_component(sdkconfig_dir ${SDKCONFIG_HEADER} DIRECTORY)
 
 foreach(include ${COMPONENT_INCLUDES})
+    # Remove HP Core's freertos headers
+    if(${include} MATCHES "${IDF_PATH}/components/freertos/")
+        continue()
+    endif()
     list(APPEND component_includes -I${include})
+    list(APPEND ULP_COMPONENT_INCLUDES ${include})
 endforeach()
 list(REMOVE_DUPLICATES component_includes)
+list(REMOVE_DUPLICATES COMPONENT_INCLUDES)
 
 list(APPEND ULP_PREPROCESSOR_ARGS ${component_includes})
 list(APPEND ULP_PREPROCESSOR_ARGS -I${COMPONENT_DIR})
 list(APPEND ULP_PREPROCESSOR_ARGS -I${sdkconfig_dir})
 list(APPEND ULP_PREPROCESSOR_ARGS -I${IDF_PATH}/components/esp_system/ld)
 
-target_include_directories(${ULP_APP_NAME} PRIVATE ${COMPONENT_INCLUDES})
+target_include_directories(${ULP_APP_NAME} PRIVATE ${ULP_COMPONENT_INCLUDES})
 
 # Pre-process the linker script
 if(ULP_COCPU_IS_RISCV)
@@ -144,6 +150,10 @@ elseif(ULP_COCPU_IS_LP_CORE)
                                                        "${IDF_PATH}/components/ulp/lp_core/shared/include")
     target_compile_definitions(${ULP_APP_NAME} PRIVATE IS_ULP_COCPU)
 
+    if(CONFIG_ULP_LP_CORE_FREERTOS)
+        add_subdirectory(${IDF_PATH}/components/ulp/lp_core/lp_core/freertos "${CMAKE_CURRENT_BINARY_DIR}/FreeRTOS")
+        target_link_libraries(${ULP_APP_NAME} PUBLIC freertos_kernel)
+    endif()
 else()
     foreach(ulp_s_source ${ULP_S_SOURCES})
         get_filename_component(ulp_ps_source ${ulp_s_source} NAME_WE)

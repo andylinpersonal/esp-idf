@@ -147,3 +147,13 @@
 [submodule "components/bt/esp_ble_mesh/lib/lib"]
 	path = components/bt/esp_ble_mesh/lib/lib
 	url = ../../espressif/esp-ble-mesh-lib.git
+
+[submodule "components/ulp/lp_core/lp_core/freertos/FreeRTOS-Kernel"]
+	path = components/ulp/lp_core/lp_core/freertos/FreeRTOS-Kernel
+	url = ../../freertos/FreeRTOS-Kernel
+	sbom-version = V11.1.0
+	sbom-cpe = cpe:2.3:o:amazon:freertos:11.1.0:*:*:*:*:*:*:*
+	sbom-supplier = Organization: FreeRTOS community <www.FreeRTOS.org>
+	sbom-url = https://github.com/freertos/FreeRTOS-Kernel
+	sbom-description = FreeRTOS
+	sbom-hash = dbf70559b27d39c1fdb68dfb9a32140b6a6777a0

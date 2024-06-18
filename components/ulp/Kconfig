@@ -92,12 +92,21 @@ menu "Ultra Low Power (ULP) Co-processor"
             Note: For LP ROM prints to work properly, make sure that the LP core boots
             from the LP ROM.
 
+    config ULP_LP_CORE_FREERTOS
+        depends on ULP_COPROC_TYPE_LP_CORE && IDF_TARGET_ESP32C6
+        bool
+        prompt "Enable FreeRTOS port for LP Core"
+        default "n"
+        help
+            Enable FreeRTOS port for LP Core. Only tested on ESP32-C6.
+
     menu "ULP Debugging Options"
         config ULP_PANIC_OUTPUT_ENABLE
             depends on ULP_COPROC_TYPE_LP_CORE && SOC_ULP_LP_UART_SUPPORTED
             bool
             prompt "Enable panic handler which outputs over LP UART"
             default "y" if IDF_TARGET_ESP32P4
+            default "y" if ULP_LP_CORE_FREERTOS
             help
                 Set this option to enable panic handler functionality. If this option is
                 enabled then the LP Core will output a panic dump over LP UART,

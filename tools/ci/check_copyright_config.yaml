@@ -92,6 +92,7 @@ asio_component:
 freertos_component:
   include:
     - 'components/freertos/**'
+    - 'components/ulp/lp_core/lp_core/freertos'
   allowed_licenses:
     - Apache-2.0    #Files added to the freertos added by us
     - MIT           #FreeRTOS sources and port files
